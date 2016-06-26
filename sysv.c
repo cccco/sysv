@@ -47,7 +47,9 @@ int main(void)
         perror("msgrcv");
         return 1;
     }
-    msgbuff.mtext[res] = 0;
+    if (res < BUFFER_SIZE) {
+        msgbuff.mtext[res] = 0;
+    }
 
     fd = open("/home/box/message.txt", O_CREAT | O_WRONLY | O_TRUNC, 0666);
     if (fd == -1) {
