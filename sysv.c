@@ -10,7 +10,7 @@
 
 int main(void)
 {
-    int fd = open("/tmp/msg.temp", O_CREAT | O_WRONLY, 0666);
+    int fd = open("/tmp/msg.temp", O_CREAT | O_RDONLY, 0666);
     if (fd == -1) {
         perror("open msg.temp");
         return 1;
@@ -23,7 +23,7 @@ int main(void)
         return 1;
     }
 
-    int msgid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
+    int msgid = msgget(key, IPC_CREAT | 0400);
     if (msgid == -1) {
         perror("msgget");
         return 1;
@@ -32,17 +32,21 @@ int main(void)
     struct msqid_ds ds;
     ds.msg_qbytes = BUFFER_SIZE;
 
-    int res = msgctl(msgid, IPC_SET , &ds);
+    int res;
+    res = msgctl(msgid, IPC_SET , &ds);
     if (res == -1) {
         perror("msgctl");
         return 1;
     }
 
-    struct msgbuf msgbuff;
+    struct msgbuf {
+	long mtype;
+	char mtext[BUFFER_SIZE];
+    } msgbuff;
     memset(msgbuff.mtext, 0, sizeof(char*) * BUFFER_SIZE);
 
 
-    res= msgrcv(msgid, &msgbuff, BUFFER_SIZE, 0, NULL);
+    res= msgrcv(msgid, (void*)&msgbuff, BUFFER_SIZE, 0, 0);
     if (res == -1) {
         perror("msgrcv");
         return 1;
